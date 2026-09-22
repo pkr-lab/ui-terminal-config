@@ -1,6 +1,6 @@
 # Dev Tools Bootstrap
 
-One script, three things, for Ubuntu Desktop: installs **Starship**, the **JetBrainsMono Nerd Font**, and whichever **AI CLI tools** you opt into. Nothing else — no editor config, no plugins, no dotfile symlinks.
+One script, for Ubuntu Desktop: installs **Starship** (plus its config), the **JetBrainsMono Nerd Font**, and whichever **AI CLI tools** you opt into. Nothing else — no editor config, no plugins.
 
 ## Usage
 
@@ -14,7 +14,7 @@ Safe to re-run any time — every step skips what's already installed.
 
 ### What it installs
 
-1. **Starship** — via its official install script, to `~/.local/bin`
+1. **Starship** — via its official install script, to `~/.local/bin`; its config (`starship-toml-template`) is symlinked to `~/.config/starship.toml` (an existing, differing file there is backed up first)
 2. **AI CLI tools**, opt-in per tool (default: none installed):
    ```sh
    INSTALL_CLAUDE=true ./install.sh   # just Claude Code

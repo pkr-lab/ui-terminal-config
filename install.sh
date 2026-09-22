@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # ---------------------------------------------------------------------------
 # Installs Starship, the JetBrainsMono Nerd Font, and only the AI CLI tools
 # you explicitly opt into. Nothing else. Idempotent -- safe to re-run.
@@ -11,7 +13,7 @@ set -euo pipefail
 #   INSTALL_CLAUDE=true INSTALL_CODEX=true INSTALL_GEMINI=true INSTALL_AGY=true ./install.sh
 # ---------------------------------------------------------------------------
 
-INSTALL_CLAUDE="${INSTALL_CLAUDE:-false}"
+INSTALL_CLAUDE="${INSTALL_CLAUDE:-true}"
 INSTALL_CODEX="${INSTALL_CODEX:-false}"
 INSTALL_GEMINI="${INSTALL_GEMINI:-false}"
 INSTALL_AGY="${INSTALL_AGY:-false}"
@@ -44,9 +46,44 @@ else
     ok "starship installed to $HOME/.local/bin"
 fi
 
+STARSHIP_TEMPLATE="$SCRIPT_DIR/starship-toml-template"
+STARSHIP_CONFIG="$HOME/.config/starship.toml"
+
+if [[ -f "$STARSHIP_TEMPLATE" ]]; then
+    mkdir -p "$HOME/.config"
+    if [[ -L "$STARSHIP_CONFIG" ]] && [[ "$(readlink -f "$STARSHIP_CONFIG")" == "$(readlink -f "$STARSHIP_TEMPLATE")" ]]; then
+        skip "starship.toml (already linked)"
+    else
+        if [[ -e "$STARSHIP_CONFIG" || -L "$STARSHIP_CONFIG" ]]; then
+            BACKUP="$STARSHIP_CONFIG.bak.$(date +%Y%m%d%H%M%S)"
+            info "Backing up existing starship.toml to $BACKUP"
+            mv "$STARSHIP_CONFIG" "$BACKUP"
+        fi
+        ln -s "$STARSHIP_TEMPLATE" "$STARSHIP_CONFIG"
+        ok "starship.toml linked to $STARSHIP_CONFIG"
+    fi
+fi
+
 # ── 2. AI CLI tools (opt-in, per tool) ────────────────────────────────────
 
 section "AI CLI tools"
+
+npm_ensure_user_prefix() {
+    command -v npm &>/dev/null || return
+    local prefix dir
+    prefix="$(npm config get prefix 2>/dev/null)"
+    dir="$prefix"
+    while [[ ! -d "$dir" ]]; do
+        dir="$(dirname "$dir")"
+    done
+    if [[ ! -w "$dir" ]]; then
+        info "npm global prefix ($prefix) isn't writable; switching to $HOME/.local"
+        mkdir -p "$HOME/.local/bin"
+        npm config set prefix "$HOME/.local"
+    fi
+}
+
+npm_ensure_user_prefix
 
 npm_global_install() {
     local cmd="$1" pkg="$2"
