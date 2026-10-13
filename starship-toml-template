@@ -144,7 +144,7 @@ ignore_base = false
 disabled = true
 
 [line_break]
-disabled = true
+disabled = false
 
 [character]
 disabled = false
